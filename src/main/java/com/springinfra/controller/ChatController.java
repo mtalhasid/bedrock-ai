@@ -3,7 +3,7 @@ package com.springinfra.controller;
 
 import com.springinfra.dto.request.ChatRequest;
 import com.springinfra.dto.response.*;
-import com.springinfra.service.ChatService;
+import com.springinfra.service.chat.ChatService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

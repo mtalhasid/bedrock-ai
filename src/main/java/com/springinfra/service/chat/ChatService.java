@@ -1,4 +1,4 @@
-package com.springinfra.service;
+package com.springinfra.service.chat;
 
 import com.springinfra.dto.request.ChatRequest;
 import com.springinfra.dto.response.ChatMessageResponse;

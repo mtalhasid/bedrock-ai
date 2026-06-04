@@ -1,4 +1,4 @@
-package com.springinfra.service;
+package com.springinfra.service.auth;
 
 import com.springinfra.dto.response.AuthResponse;
 import com.springinfra.dto.request.LoginRequest;

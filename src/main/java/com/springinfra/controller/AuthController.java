@@ -6,7 +6,7 @@ import com.springinfra.dto.request.RegisterRequest;
 import com.springinfra.dto.response.ApiResponse;
 import com.springinfra.dto.response.AuthResponse;
 import com.springinfra.dto.response.UserResponse;
-import com.springinfra.service.AuthService;
+import com.springinfra.service.auth.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

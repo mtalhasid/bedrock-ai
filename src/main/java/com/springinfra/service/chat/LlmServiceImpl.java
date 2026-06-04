@@ -4,7 +4,7 @@ import com.springinfra.dto.external.GeminiRequest;
 import com.springinfra.dto.external.GeminiResponse;
 import com.springinfra.dto.response.LlmResult;
 import com.springinfra.entity.ChatMessage;
-import com.springinfra.service.LlmService;
+import com.springinfra.service.chat.LlmService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
