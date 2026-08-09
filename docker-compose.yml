@@ -7,9 +7,9 @@ services:
       dockerfile: Dockerfile
       target: production
     ports:
-      - "8080:8080"
+      - "8080:8080"   
+    restart: unless-stopped    
     environment:
-      # Managed Services (Neon & Upstash)
       - SPRING_DATASOURCE_URL=${DB_URL}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}

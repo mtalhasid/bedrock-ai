@@ -32,5 +32,11 @@ build/
 ### VS Code ###
 .vscode/
 
-# Environment Variables
+# Environment Variables — never commit real secrets
 .env
+
+# Terraform state — may contain sensitive infrastructure details
+*.tfstate
+*.tfstate.*
+**/.terraform/
+terraform/.terraform.lock.hcl
