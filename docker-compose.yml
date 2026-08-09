@@ -2,13 +2,10 @@ version: '3.8'
 
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
+    image: talhadevelopes/bedrock-ai:latest
     ports:
-      - "8080:8080"   
-    restart: unless-stopped    
+      - "8080:8080"
+    restart: unless-stopped
     environment:
       - SPRING_DATASOURCE_URL=${DB_URL}
       - SPRING_DATASOURCE_USERNAME=${DB_USER}
@@ -16,6 +13,7 @@ services:
       - SPRING_DATA_REDIS_HOST=${REDIS_HOST}
       - SPRING_DATA_REDIS_PORT=${REDIS_PORT}
       - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}
+      - SPRING_DATA_REDIS_SSL_ENABLED=true
       - JWT_SECRET=${JWT_SECRET}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
     healthcheck:
