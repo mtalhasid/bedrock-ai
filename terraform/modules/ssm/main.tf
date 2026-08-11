@@ -1,20 +1,28 @@
 terraform {
-  required_version = ">= 1.0.0" # Ensure that the Terraform version is 1.0.0 or higher
-
   required_providers {
     aws = {
-      source  = "hashicorp/aws" # Specify the source of the AWS provider
-      version = "~> 4.0"        # Use a version of the AWS provider that is compatible with version
+      source  = "hashicorp/aws"
+      version = "5.99.1"
     }
   }
 }
-
-provider "aws" {
-  region = "us-east-1" # Set the AWS region to US East (N. Virginia)
+resource "aws_ssm_parameter" "db_url" {
+  name  = "/${var.project_name}/${var.environment}/DB_URL"
+  type  = "SecureString"
+  value = var.db_url
+  tags = {
+    Name        = "${var.project_name}-db-url"
+    Environment = var.environment
+  }
 }
 
-resource "aws_instance" "aws_example" {
+resource "aws_ssm_parameter" "ai_api_key" {
+  name  = "/${var.project_name}/${var.environment}/AI_API_KEY"
+  type  = "SecureString"
+  value = var.ai_api_key
+
   tags = {
-    Name = "ExampleInstance" # Tag the instance with a Name tag for easier identification
+    Name        = "${var.project_name}-ai-api-key"
+    Environment = var.environment
   }
 }

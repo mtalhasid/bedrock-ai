@@ -30,7 +30,56 @@ module "security_groups" {
 }
 
 module "iam" {
-  source = "./modules/iam"
-  environment = var.environment
+  source       = "./modules/iam"
+  environment  = var.environment
   project_name = var.project_name
+}
+
+module "ecr" {
+  source       = "./modules/ecr"
+  environment  = var.environment
+  project_name = var.project_name
+}
+
+module "alb" {
+  source             = "./modules/alb"
+  project_name       = var.project_name
+  environment        = var.environment
+  vpc_id             = module.vpc.vpc_id
+  public_subnet_1_id = module.vpc.public_subnet_1_id
+  public_subnet_2_id = module.vpc.public_subnet_2_id
+  alb_sg_id          = module.security_groups.alb_sg_id
+}
+
+module "ssm" {
+  source       = "./modules/ssm"
+  ai_api_key   = var.ai_api_key
+  db_url       = var.db_url
+  environment  = var.environment
+  project_name = var.project_name
+}
+
+
+
+module "ec2" {
+  source                    = "./modules/ec2"
+  project_name              = var.project_name
+  environment               = var.environment
+  instance_type             = var.instance_type
+  public_subnet_1_id        = module.vpc.public_subnet_1_id
+  public_subnet_2_id        = module.vpc.public_subnet_2_id
+  ec2_sg_id                 = module.security_groups.ec2_sg_id
+  instance_profile_name     = module.iam.ec2_instance_profile_name
+  target_group_arn          = module.alb.target_group_arn
+  ecr_repository_url        = module.ecr.repository_url
+  db_url_parameter_name     = module.ssm.db_url_parameter_name
+  ai_api_key_parameter_name = module.ssm.ai_api_key_parameter_name
+  aws_region                = var.aws_region
+  log_group_name            = module.cloudwatch.log_group_name
+}
+
+module "cloudwatch" {
+  source       = "./modules/cloudwatch"
+  project_name = var.project_name
+  environment  = var.environment
 }

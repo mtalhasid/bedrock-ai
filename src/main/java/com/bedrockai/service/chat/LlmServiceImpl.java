@@ -4,7 +4,6 @@ import com.bedrockai.dto.external.GeminiRequest;
 import com.bedrockai.dto.external.GeminiResponse;
 import com.bedrockai.dto.response.LlmResult;
 import com.bedrockai.entity.ChatMessage;
-import com.bedrockai.service.chat.LlmService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,25 +33,25 @@ public class LlmServiceImpl implements LlmService {
     @CircuitBreaker(name = "ai", fallbackMethod = "fallback")
     public LlmResult generateResponse(List<ChatMessage> history, String prompt) {
         boolean isFirst = history.isEmpty();
-        
-        String finalPrompt = isFirst 
-            ? prompt + "\n\nRespond in JSON: {\"title\": \"5 word title\", \"answer\": \"your answer\"}"
-            : prompt;
+
+        String finalPrompt = isFirst
+                ? prompt + "\n\nRespond in JSON: {\"title\": \"5 word title\", \"answer\": \"your answer\"}"
+                : prompt;
 
         List<GeminiRequest.Content> contents = new ArrayList<>();
-        
+
         // Add history
         for (ChatMessage msg : history) {
             contents.add(new GeminiRequest.Content(
-                msg.getRole().name().toLowerCase(),
-                List.of(new GeminiRequest.Part(msg.getContent()))
+                    msg.getRole().name().toLowerCase(),
+                    List.of(new GeminiRequest.Part(msg.getContent()))
             ));
         }
-        
+
         // Add current prompt
         contents.add(new GeminiRequest.Content(
-            "user",
-            List.of(new GeminiRequest.Part(finalPrompt))
+                "user",
+                List.of(new GeminiRequest.Part(finalPrompt))
         ));
 
         GeminiRequest request = new GeminiRequest(contents);

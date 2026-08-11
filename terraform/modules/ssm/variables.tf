@@ -1,5 +1,17 @@
-variable "instance_type" {
-  type        = string                     # The type of the variable, in this case a string
-  default     = "t2.micro"                 # Default value for the variable
-  description = "The type of EC2 instance" # Description of what this variable represents
+variable "project_name" {
+  type = string
+}
+
+variable "environment" {
+  type = string
+}
+
+variable "db_url" {
+  type      = string
+  sensitive = true
+}
+
+variable "ai_api_key" {
+  type      = string
+  sensitive = true
 }

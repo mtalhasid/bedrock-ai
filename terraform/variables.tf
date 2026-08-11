@@ -29,3 +29,19 @@ variable "az_1" {
 variable "az_2" {
   type = string
 }
+
+variable "db_url" {
+  description = "Neon PostgreSQL connection string"
+  type        = string
+  sensitive   = true
+}
+
+variable "ai_api_key" {
+  description = "AI service API key"
+  type        = string
+  sensitive   = true
+}
+
+variable "instance_type" {
+  type = string
+}

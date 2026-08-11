@@ -1,4 +1,8 @@
-output "instance_public_ip" {
-  value       = ""                                          # The actual value to be outputted
-  description = "The public IP address of the EC2 instance" # Description of what this output represents
+output "db_url_parameter_name" {
+  value = aws_ssm_parameter.db_url.name
 }
+
+output "ai_api_key_parameter_name" {
+  value = aws_ssm_parameter.ai_api_key.name
+}
+

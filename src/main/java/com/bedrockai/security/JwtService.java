@@ -10,8 +10,12 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HexFormat;
 import java.util.UUID;
 
 @Service
@@ -21,43 +25,63 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secret;
 
+    @Value("${jwt.access-token-expiration}")
+    private Duration accessTokenExpiration;
+
+    @Value("${jwt.refresh-token-expiration}")
+    private Duration refreshTokenExpiration;
+
     private SecretKey secretKey;
 
     @PostConstruct
     public void init() {
-        byte[] keyBytes = decodeSecretKeyBytes();
-        this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+        try {
+            byte[] keyBytes = decodeSecretKeyBytes();
+            this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+        } catch (IllegalArgumentException e) {
+            this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
+        }
+
     }
 
     private byte[] decodeSecretKeyBytes() {
+        byte[] bytes;
         try {
-            byte[] decoded = Base64.getDecoder().decode(secret);
-            if (decoded.length >= 32) {
-                return decoded;
+            bytes = Base64.getDecoder().decode(secret);
+        } catch (IllegalArgumentException e) {
+            bytes = secret.getBytes(StandardCharsets.UTF_8);
+        }
+        if (bytes.length < 32) {
+            bytes = secret.getBytes(StandardCharsets.UTF_8);
+            if (bytes.length < 32) {
+                throw new IllegalArgumentException("jwt.secret must be at least 32 bytes");
             }
-        } catch (IllegalArgumentException ignored) {
-            // fall through to UTF-8 bytes
         }
-        byte[] utf8Bytes = secret.getBytes(StandardCharsets.UTF_8);
-        if (utf8Bytes.length < 32) {
-            throw new IllegalArgumentException("jwt.secret must be at least 32 bytes (UTF-8) or Base64-decoded to 32+ bytes");
-        }
-        return utf8Bytes;
+        return bytes;
     }
 
-    @Value("${jwt.access-token-expiration}")
-    private long accessTokenExpiration;
+     public String hashToken(String token) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    @Value("${jwt.refresh-token-expiration}")
-    private long refreshTokenExpiration;
-
-    public String generateToken(String email, long expiration) {
+    public String generateToken(String email, Duration expiration, String type) {
         return Jwts.builder()
                 .subject(email)
+                .claim("type", type)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + expiration.toMillis()))
                 .signWith(secretKey)
                 .compact();
+    }
+
+    public String tokenType(String token) {
+        return extractClaims(token).get("type", String.class);
     }
 
     public Claims extractClaims(String token) {
@@ -68,11 +92,11 @@ public class JwtService {
     }
 
     public String generateAccessToken(UUID id) {
-        return generateToken(id.toString(), accessTokenExpiration);
+        return generateToken(id.toString(), accessTokenExpiration, "access");
     }
 
     public String generateRefreshToken(UUID id) {
-        return generateToken(id.toString(), refreshTokenExpiration);
+        return generateToken(id.toString(), refreshTokenExpiration, "refresh");
     }
 
     public String extractSubject(String token) {
@@ -81,10 +105,10 @@ public class JwtService {
 
     public boolean isTokenValid(String token) {
         try {
-            return extractClaims(token).getExpiration().after(new Date());
+            Claims claims = extractClaims(token);
+            return claims.getExpiration().after(new Date());
         } catch (Exception e) {
             return false;
         }
     }
-
 }

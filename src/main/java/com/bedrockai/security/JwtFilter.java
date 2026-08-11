@@ -35,6 +35,12 @@ public class JwtFilter extends OncePerRequestFilter {
             return;
         }
 
+        String tokenType = jwtService.tokenType(token);
+        if (!"access".equals(tokenType)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String subject = jwtService.extractSubject(token);
         if (subject != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UUID userId = UUID.fromString(subject);

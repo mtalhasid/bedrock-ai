@@ -1,20 +1,18 @@
-terraform {
-  required_version = ">= 1.0.0" # Ensure that the Terraform version is 1.0.0 or higher
 
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws" # Specify the source of the AWS provider
-      version = "~> 4.0"        # Use a version of the AWS provider that is compatible with version
-    }
+resource "aws_ecr_repository" "app" {
+  name                 = "${var.project_name}-app"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
   }
-}
 
-provider "aws" {
-  region = "us-east-1" # Set the AWS region to US East (N. Virginia)
-}
+  lifecycle {
+    prevent_destroy = true
+  }
 
-resource "aws_instance" "aws_example" {
   tags = {
-    Name = "ExampleInstance" # Tag the instance with a Name tag for easier identification
+    Name        = "${var.project_name}-ecr"
+    Environment = var.environment
   }
 }

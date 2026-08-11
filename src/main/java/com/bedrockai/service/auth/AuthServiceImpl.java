@@ -34,8 +34,17 @@ public class AuthServiceImpl implements AuthService {
                 user.getUsername(),
                 user.getEmail(),
                 user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
+                user.getUpdatedAt());
+    }
+
+    private User getUserByRefreshToken(String rawToken) {
+        return userRepository.findByRefreshToken(jwtService.hashToken(rawToken))
+                .orElseThrow(() -> new AppException("Invalid token", HttpStatus.NOT_FOUND));
+    }
+
+    private void saveRefreshToken(User user, String rawToken) {
+        user.setRefreshToken(jwtService.hashToken(rawToken));
+        userRepository.save(user);
     }
 
     @Override
@@ -44,16 +53,14 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.existsByEmail(request.email())) {
             throw new AppException("Email already exists", HttpStatus.CONFLICT);
         }
-        User user = User.builder()
+        User saved = userRepository.save(User.builder()
                 .username(request.username())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
-                .build();
-        User saved = userRepository.save(user);
+                .build());
         String accessToken = jwtService.generateAccessToken(saved.getId());
         String refreshToken = jwtService.generateRefreshToken(saved.getId());
-        user.setRefreshToken(refreshToken);
-        userRepository.save(saved);
+        saveRefreshToken(saved, refreshToken);
         return new AuthResponse(accessToken, refreshToken);
     }
 
@@ -61,40 +68,32 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.email()).orElseThrow(
-                () -> new AppException("Email not found", HttpStatus.NOT_FOUND)
-        );
+                () -> new AppException("Email not found", HttpStatus.NOT_FOUND));
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
             throw new AppException("Wrong password", HttpStatus.UNPROCESSABLE_ENTITY);
         }
-        User saved = userRepository.save(user);
-        String accessToken = jwtService.generateAccessToken(saved.getId());
-        String refreshToken = jwtService.generateRefreshToken(saved.getId());
-        user.setRefreshToken(refreshToken);
-        userRepository.save(saved);
+        String accessToken = jwtService.generateAccessToken(user.getId());
+        String refreshToken = jwtService.generateRefreshToken(user.getId());
+        saveRefreshToken(user, refreshToken);
         return new AuthResponse(accessToken, refreshToken);
     }
 
     @Override
     @Transactional
     public AuthResponse refresh(String refreshToken) {
-        User user = userRepository.findByRefreshToken(refreshToken).orElseThrow(
-                () -> new AppException("Invalid token", HttpStatus.NOT_FOUND)
-        );
         if (!jwtService.isTokenValid(refreshToken)) {
             throw new AppException("Token not found", HttpStatus.UNPROCESSABLE_ENTITY);
         }
+        User user = getUserByRefreshToken(refreshToken);
         String accessToken = jwtService.generateAccessToken(user.getId());
         String newRefreshToken = jwtService.generateRefreshToken(user.getId());
-        user.setRefreshToken(newRefreshToken);
-        userRepository.save(user);
+        saveRefreshToken(user, newRefreshToken);
         return new AuthResponse(accessToken, newRefreshToken);
     }
 
     @Override
     public void logout(String token) {
-        User user = userRepository.findByRefreshToken(token).orElseThrow(
-                () -> new AppException("Invalid token", HttpStatus.NOT_FOUND)
-        );
+        User user = getUserByRefreshToken(token);
         user.setRefreshToken(null);
         userRepository.save(user);
     }
@@ -109,11 +108,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserResponse getMe() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException("not found", HttpStatus.NOT_FOUND);
-        }
-        UUID userId = (UUID) authentication.getPrincipal();
+        UUID userId = getAuthenticatedUserId();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException("User not found", HttpStatus.NOT_FOUND));
         return mapToResponse(user);
@@ -122,5 +117,13 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Page<UserResponse> getAllUsers(Pageable pageable) {
         return userRepository.findAll(pageable).map(this::mapToResponse);
+    }
+
+    private UUID getAuthenticatedUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof UUID userId)) {
+            throw new AppException("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+        return userId;
     }
 }
