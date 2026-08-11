@@ -4,10 +4,13 @@ import com.bedrockai.dto.external.GeminiRequest;
 import com.bedrockai.dto.external.GeminiResponse;
 import com.bedrockai.dto.response.LlmResult;
 import com.bedrockai.entity.ChatMessage;
+import com.bedrockai.exception.AppException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import tools.jackson.databind.ObjectMapper;
@@ -30,6 +33,7 @@ public class LlmServiceImpl implements LlmService {
     private String apiUrl;
 
     @Override
+    @Retry(name = "ai")
     @CircuitBreaker(name = "ai", fallbackMethod = "fallback")
     public LlmResult generateResponse(List<ChatMessage> history, String prompt) {
         boolean isFirst = history.isEmpty();
@@ -83,7 +87,10 @@ public class LlmServiceImpl implements LlmService {
     }
 
     public LlmResult fallback(List<ChatMessage> history, String prompt, Throwable t) {
-        log.error("Circuit Breaker triggered for prompt: {}. Error: {}", prompt, t.getMessage());
-        return new LlmResult("Service Unavailable", "Gemini Service is currently unavailable. Please try again later.");
+        log.error("Gemini API unavailable for prompt: {}", prompt, t);
+        throw new AppException(
+                "Gemini service is temporarily unavailable. Please try again.",
+                HttpStatus.SERVICE_UNAVAILABLE
+        );
     }
 }

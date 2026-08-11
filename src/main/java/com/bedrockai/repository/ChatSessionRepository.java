@@ -20,4 +20,6 @@ public interface ChatSessionRepository extends JpaRepository<ChatSession, UUID> 
 
     @EntityGraph(attributePaths = {"user"})
     Page<ChatSession> findByUserIdAndTitleContainingIgnoreCase(UUID userId, String title, Pageable pageable);
+
+    Page<ChatSession> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 }

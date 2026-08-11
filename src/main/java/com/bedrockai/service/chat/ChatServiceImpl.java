@@ -95,7 +95,7 @@ public class ChatServiceImpl implements ChatService {
         if (search != null && !search.isBlank()) {
             sessions = sessionRepository.findByUserIdAndTitleContainingIgnoreCase(userId, search, pageable);
         } else {
-            sessions = sessionRepository.findAll(pageable); 
+            sessions = sessionRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
         }
         
         return sessions.map(s -> new ChatSessionResponse(s.getId(), s.getTitle(), s.getCreatedAt()));

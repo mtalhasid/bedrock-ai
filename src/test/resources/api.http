@@ -1,0 +1,115 @@
+# Bedrock AI — Local API reference
+@baseUrl = http://localhost:8080
+@accessToken = paste-access-token-here
+@refreshToken = paste-refresh-token-here
+@sessionId = paste-session-id-here
+
+###############################################################################
+# Health
+###############################################################################
+
+GET {{baseUrl}}/api/health
+
+###############################################################################
+# Auth (public — no token needed)
+###############################################################################
+
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "password123"
+}
+
+###
+
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+
+###
+
+POST {{baseUrl}}/api/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+###
+
+POST {{baseUrl}}/api/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+###############################################################################
+# Auth (protected — requires Bearer token)
+# Header: Authorization: Bearer {{accessToken}}
+###############################################################################
+
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{accessToken}}
+
+###
+
+GET {{baseUrl}}/api/auth/users?page=0&size=20
+Authorization: Bearer {{accessToken}}
+
+###
+
+DELETE {{baseUrl}}/api/auth/me
+Authorization: Bearer {{accessToken}}
+
+###############################################################################
+# Chat (protected — requires Bearer token)
+# Header: Authorization: Bearer {{accessToken}}
+###############################################################################
+
+POST {{baseUrl}}/api/chat
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "prompt": "Explain Spring Boot in one sentence",
+  "sessionId": null
+}
+
+###
+
+POST {{baseUrl}}/api/chat
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "prompt": "Can you give me more detail?",
+  "sessionId": "{{sessionId}}"
+}
+
+###
+
+GET {{baseUrl}}/api/chat/sessions?page=0&size=20
+Authorization: Bearer {{accessToken}}
+
+###
+
+GET {{baseUrl}}/api/chat/sessions?page=0&size=20&search=spring
+Authorization: Bearer {{accessToken}}
+
+###
+
+GET {{baseUrl}}/api/chat/history/{{sessionId}}
+Authorization: Bearer {{accessToken}}
+
+###
+
+DELETE {{baseUrl}}/api/chat/history/{{sessionId}}
+Authorization: Bearer {{accessToken}}
