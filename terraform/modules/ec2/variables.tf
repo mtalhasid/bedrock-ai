@@ -33,11 +33,7 @@ variable "ecr_repository_url" {
   type = string
 }
 
-variable "db_url_parameter_name" {
-  type = string
-}
-
-variable "ai_api_key_parameter_name" {
+variable "ssm_parameter_prefix" {
   type = string
 }
 

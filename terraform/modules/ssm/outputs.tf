@@ -1,8 +1,3 @@
-output "db_url_parameter_name" {
-  value = aws_ssm_parameter.db_url.name
+output "parameter_prefix" {
+  value = "/${var.project_name}/${var.environment}"
 }
-
-output "ai_api_key_parameter_name" {
-  value = aws_ssm_parameter.ai_api_key.name
-}
-

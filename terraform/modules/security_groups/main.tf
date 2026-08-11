@@ -41,10 +41,10 @@ resource "aws_security_group" "ec2_sg" {
   vpc_id      = var.vpc_id
 
   ingress {
-    description     = "HTTP from ALB only"
-    from_port       = 8080
-    to_port         = 8080
-    protocol        = "tcp"
+    description = "HTTP from ALB only"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
     // Traffic MUST go THROUGH ALB first
     security_groups = [aws_security_group.alb_sg.id]
   }
