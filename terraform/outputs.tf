@@ -35,5 +35,5 @@ output "instance_2_public_ip" {
 
 output "alb_dns_name" {
   value       = module.alb.alb_dns_name
-  description = "DNS name of the Application Load Balancer — use this to reach your app"
+  description = "DNS name of the Application Load Balancer"
 }

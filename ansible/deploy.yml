@@ -1,0 +1,5 @@
+- name: Deploy bedrock-ai application
+  hosts: all
+  gather_facts: true
+  roles:
+    - app_deploy

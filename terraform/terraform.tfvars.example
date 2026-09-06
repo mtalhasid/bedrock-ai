@@ -7,6 +7,7 @@ public_subnet_2_cidr = "10.0.2.0/24"
 az_1                 = "eu-north-1a"
 az_2                 = "eu-north-1b"
 instance_type        = "t3.micro"
+public_key           = "ssh-rsa AAAA...your-public-key-here"
 
 db_url         = "jdbc:postgresql://<host>/<dbname>?sslmode=require"
 db_user        = "your-neon-username"

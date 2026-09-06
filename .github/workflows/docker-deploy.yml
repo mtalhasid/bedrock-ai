@@ -1,39 +1,109 @@
-name: "Build and push docker images to DockerHub"
+# name: "Build, Push, and Deploy"
 
-on:
-  push:
-    branches: "main"
+# on:
+#   push:
+#     branches: [ "main" ]
 
-jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
+# jobs:
+#   build-and-push-dockerhub:
+#     name: Build and Push to Docker Hub
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: maven
+#       - name: Set up JDK 21
+#         uses: actions/setup-java@v4
+#         with:
+#           java-version: '21'
+#           distribution: 'temurin'
+#           cache: maven
 
-      - name: Run tests
-        run: |
-          chmod +x mvnw
-          ./mvnw test -Dtest="AuthControllerTest,ChatControllerTest"
+#       - name: Run tests
+#         run: |
+#           chmod +x mvnw
+#           ./mvnw test -Dtest="AuthControllerTest,ChatControllerTest"
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_SECRET }}
+#       - name: Login to Docker Hub
+#         uses: docker/login-action@v3
+#         with:
+#           username: ${{ secrets.DOCKER_HUB_USERNAME }}
+#           password: ${{ secrets.DOCKER_HUB_SECRET }}
 
-      - name: Push to Docker Hub
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          target: production
-          push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/bedrock-ai:latest
+#       - name: Push to Docker Hub
+#         uses: docker/build-push-action@v5
+#         with:
+#           context: .
+#           target: production
+#           push: true
+#           tags: ${{ secrets.DOCKER_HUB_USERNAME }}/bedrock-ai:latest
+
+#   push-to-ecr:
+#     name: Push to AWS ECR
+#     runs-on: ubuntu-latest
+#     needs: build-and-push-dockerhub
+
+#     steps:
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: eu-north-1
+
+#       - name: Login to Amazon ECR
+#         id: login-ecr
+#         uses: aws-actions/amazon-ecr-login@v2
+
+#       - name: Pull from Docker Hub and push to ECR
+#         run: |
+#           docker pull ${{ secrets.DOCKER_HUB_USERNAME }}/bedrock-ai:latest
+#           docker tag ${{ secrets.DOCKER_HUB_USERNAME }}/bedrock-ai:latest ${{ secrets.ECR_REGISTRY }}:latest
+#           docker push ${{ secrets.ECR_REGISTRY }}:latest
+
+#   deploy-with-ansible:
+#     name: Deploy to EC2 with Ansible
+#     runs-on: ubuntu-latest
+#     needs: push-to-ecr
+#     defaults:
+#       run:
+#         working-directory: ansible
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+
+#       - name: Set up Python
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: "3.12"
+
+#       - name: Install Ansible and AWS inventory dependencies
+#         run: |
+#           python -m pip install --upgrade pip
+#           pip install ansible boto3 botocore
+#           ansible-galaxy collection install amazon.aws community.docker
+
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: eu-north-1
+
+#       - name: Install Ansible SSH key
+#         env:
+#           ANSIBLE_SSH_PRIVATE_KEY: ${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}
+#         run: |
+#           mkdir -p ~/.ssh
+#           printf '%s\n' "$ANSIBLE_SSH_PRIVATE_KEY" > ~/.ssh/bedrock-ai-key
+#           chmod 600 ~/.ssh/bedrock-ai-key
+
+#       - name: Deploy application with Ansible
+#         env:
+#           ANSIBLE_HOST_KEY_CHECKING: "False"
+#           AWS_DEFAULT_REGION: eu-north-1
+#         run: |
+#           ansible-playbook -i inventory/aws_ec2.yml deploy.yml \
+#             -e "ecr_repository_url=${{ secrets.ECR_REGISTRY }}"

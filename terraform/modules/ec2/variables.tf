@@ -13,13 +13,14 @@ variable "instance_type" {
 variable "public_subnet_1_id" {
   type = string
 }
+
 variable "public_subnet_2_id" {
   type = string
 }
+
 variable "ec2_sg_id" {
   type = string
 }
-
 
 variable "instance_profile_name" {
   type = string
@@ -29,19 +30,7 @@ variable "target_group_arn" {
   type = string
 }
 
-variable "ecr_repository_url" {
-  type = string
-}
-
-variable "ssm_parameter_prefix" {
-  type = string
-}
-
-variable "aws_region" {
-  type = string
-}
-
-variable "log_group_name" {
+variable "public_key" {
   type        = string
-  description = "CloudWatch log group name for Docker awslogs driver"
+  description = "SSH public key content for Ansible access"
 }

@@ -75,10 +75,7 @@ module "ec2" {
   ec2_sg_id             = module.security_groups.ec2_sg_id
   instance_profile_name = module.iam.ec2_instance_profile_name
   target_group_arn      = module.alb.target_group_arn
-  ecr_repository_url    = module.ecr.repository_url
-  ssm_parameter_prefix  = module.ssm.parameter_prefix
-  aws_region            = var.aws_region
-  log_group_name        = module.cloudwatch.log_group_name
+  public_key            = var.public_key
 }
 
 module "cloudwatch" {

@@ -75,3 +75,8 @@ variable "ai_api_key" {
 variable "instance_type" {
   type = string
 }
+
+variable "public_key" {
+  type        = string
+  description = "SSH public key content for Ansible access"
+}

@@ -1,0 +1,83 @@
+- name: Install Docker and pip
+  ansible.builtin.yum:
+    name:
+      - docker
+      - python3-pip
+    state: present
+  become: true
+
+- name: Install Python Docker SDK
+  ansible.builtin.pip:
+    name: docker
+  become: true
+
+- name: Start and enable Docker
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true        
+  become: true
+
+- name: Add ec2-user to docker group
+  ansible.builtin.user:
+    name: ec2-user
+    groups: docker
+    append: true
+  become: true
+
+- name: Login to Amazon ECR
+  ansible.builtin.shell: >
+    aws ecr get-login-password --region {{ aws_region }} |
+    docker login --username AWS --password-stdin {{ ecr_repository_url }}
+  become: true
+
+- name: Pull latest image from ECR
+  community.docker.docker_image:
+    name: "{{ ecr_repository_url }}:latest"
+    source: pull
+    force_source: true
+  become: true
+
+- name: Fetch secrets from SSM
+  ansible.builtin.command: >
+    aws ssm get-parameter
+    --name "{{ ssm_prefix }}/{{ item }}"
+    --with-decryption
+    --query "Parameter.Value"
+    --output text
+    --region "{{ aws_region }}"
+  register: ssm_params
+  loop:
+    - DB_URL
+    - DB_USER
+    - DB_PASSWORD
+    - REDIS_HOST
+    - REDIS_PORT
+    - REDIS_PASSWORD
+    - JWT_SECRET
+    - AI_API_KEY
+  no_log: true             
+
+- name: Build secrets dictionary
+  ansible.builtin.set_fact:
+    app_secrets: "{{ app_secrets | default({}) | combine({item.item: item.stdout}) }}"
+  loop: "{{ ssm_params.results }}"
+  no_log: true            
+
+- name: Stop existing container
+  community.docker.docker_container:
+    name: "{{ app_container_name }}"
+    state: absent
+  become: true
+  ignore_errors: true
+
+- name: Run application container
+  community.docker.docker_container:
+    name: "{{ app_container_name }}"
+    image: "{{ ecr_repository_url }}:latest"
+    state: started
+    restart_policy: always
+    ports:
+      - "{{ app_port }}:{{ app_port }}"
+    env: "{{ app_secrets }}"   
+  become: true

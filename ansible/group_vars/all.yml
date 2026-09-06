@@ -1,0 +1,5 @@
+aws_region: "eu-north-1"
+ecr_repository_url: "ACCOUNT_ID.dkr.ecr.eu-north-1.amazonaws.com/bedrock-ai-dev"
+app_container_name: "bedrock-ai"
+app_port: 8080
+ssm_prefix: "/bedrock-ai/dev"
